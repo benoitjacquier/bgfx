@@ -343,7 +343,9 @@ namespace entry
 		}
 	}
 
-	struct Context
+	bool g_hideWindow = false;
+
+	struct	Context
 	{
 		Context()
 			: m_mz(0)
@@ -464,7 +466,7 @@ namespace entry
 			m_windowAlloc.alloc();
 			m_hwnd[0] = CreateWindowA("bgfx"
 				, "BGFX"
-				, WS_OVERLAPPEDWINDOW|WS_VISIBLE
+				, g_hideWindow? (WS_OVERLAPPEDWINDOW) : (WS_OVERLAPPEDWINDOW|WS_VISIBLE)
 				, 0
 				, 0
 				, ENTRY_DEFAULT_WIDTH
@@ -856,13 +858,19 @@ namespace entry
 			FillRect(hdc, &rect, brush);
 		}
 
+		
+
 		void adjust(HWND _hwnd, uint32_t _width, uint32_t _height, bool _windowFrame)
 		{
 			m_width  = _width;
 			m_height = _height;
 			m_aspectRatio = float(_width)/float(_height);
 
-			ShowWindow(_hwnd, SW_SHOWNORMAL);
+			if (!g_hideWindow)
+			{
+				ShowWindow(_hwnd, SW_SHOWNORMAL);
+			}
+			
 			RECT rect;
 			RECT newrect = {0, 0, (LONG)_width, (LONG)_height};
 			DWORD style = WS_POPUP|WS_SYSMENU;
@@ -930,10 +938,13 @@ namespace entry
 				, top
 				, width
 				, height
-				, SWP_SHOWWINDOW
+				, g_hideWindow?SWP_HIDEWINDOW:SWP_SHOWWINDOW
 				);
 
-			ShowWindow(_hwnd, SW_RESTORE);
+			if (!g_hideWindow)
+			{
+				ShowWindow(_hwnd, SW_RESTORE);
+			}
 
 			m_frame = _windowFrame;
 		}
@@ -1092,12 +1103,18 @@ namespace entry
 		return result;
 	}
 
-} // namespace entry
+	
 
+} // namespace entry
+#ifndef ENTRY_CUSTOM_MAIN
 int main(int _argc, char** _argv)
+#else
+int EntryRun(int _argc, char** _argv)
+#endif
 {
 	using namespace entry;
 	return s_ctx.run(_argc, _argv);
 }
+
 
 #endif // BX_PLATFORM_WINDOWS
